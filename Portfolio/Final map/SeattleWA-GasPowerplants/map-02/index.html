@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset=utf-8 />
+    <title>Geo409 Map 02</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+
+    <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+    <link href='http://fonts.googleapis.com/css?family=Lato' rel='stylesheet' type='text/css'>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: whitesmoke;
+            font-family: Lato, sans-serif;
+            color: #0D0000;
+        }
+        header {
+            padding: 6px 10%;
+        }
+        h1 {
+            display: inline-block;
+            margin-right: 20px;
+            color: #001323;
+        }
+        h2 {
+            display: inline-block;
+            color: #001323;
+        }
+        #map {
+            width: 80%;
+            height: 540px;
+            margin: 10px auto;
+        }
+        footer {
+            padding: 6px 10%;
+            width: 80%;
+        }
+        p {
+            font-size: 1em;
+            color: #001323;
+        }
+        /* Additional style rules go here! */
+        
+    </style>
+</head>
+
+<body>
+    <header>
+        
+       <h1>Gas Plants</h1>
+        <h2>Seattle WA</h2>
+        
+    </header>
+
+        <div id='map'></div>
+
+    <footer>
+        <p>Map authored by Sydney Dobson</p>
+        <p>Gas plants</p>
+        <p>Seattle Washington has majority gas plants. This map should show them according to size.
+        </p>
+    </footer>
+    
+        <script src="power-plants-assignment.js"></script>
+    
+    <script>
+        
+        var map = L.map('map', {
+            center: [47.6097, -122.3331],
+            zoom: 8,
+        });
+       
+        var tiles = L.tileLayer('http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', 
+                                      {
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
+            subdomains: 'abcd',
+            minZoom: 8,
+            maxZoom: 8
+        });
+        
+        map.addLayer(tiles);
+        plants.features.sort(function(a, b) {
+        return b.properties.capacity_mw - a.properties.capacity_mw;
+            
+        });
+        
+       var gasPlantData = L.geoJson(plants, {
+            pointToLayer: function(feature,latlng) {
+                return L.circleMarker(latlng, { 
+                    color: 'pink',
+                    weight: 3,
+                    fillColor: 'green',
+                    fillOpacity: 2,
+                    radius: getRadius(feature.properties.capacity)
+                });
+            }
+       }).addTo(map);
+           
+//            filter: function(features, layer) {
+//
+//                if(features.properties.source = ["gas"] &&
+//                   features.properties.source["gas"] <= 500) {
+//                    return features;
+//                    }
+//                },
+//           
+//            onEachFeature: function(features, layer){
+//                var props = features.properties;
+//                var content = "<b>"+props.plant_name+"</b><br>"+
+//                    props.capacity.toLocaleString()+" MW<br><b>"+
+//                    "<b>"+"This plant is "+ 23+"MW"+" from Seattle, WA.</b>";
+//                var source = props.source;
+//                for(var fuel in source) {
+//                    content+="<b>"+fuel+"</b>: " +source[fuel].toLocaleString()+" MW<br>";
+//                }
+//                layer.bindPopup(content);
+        
+//        
+//             layer.on('mouseover', function() {
+//                layer.setStyle({
+//                    fillColor: 'pink'
+//                    });
+//                });
+//                layer.on('mouseout', function() {
+//                    layer.setStyle({
+//                        fillColor: 'green'
+//                        });
+//                });
+//            }.addTo(map);
+//        
+        
+        
+        
+        
+       function getRadius(area) {
+            var radius = Math.sqrt(area/Math.PI);
+            return radius * .6;  
+        }
+
+        // add JavaScript here
+        
+    </script>
+    
+</body>
+
+</html>
