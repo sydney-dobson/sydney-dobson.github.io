@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset=utf-8 />
+    <title>Final map</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+
+    <script src="https://code.jquery.com/jquery-1.11.2.min.js"></script>
+    <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/4.1.0/papaparse.min.js"></script>
+    <script src="simple_statistics.js"></script>
+  
+
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+    <link href='http://fonts.googleapis.com/css?family=Lato' rel='stylesheet' type='text/css'>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: whitesmoke;
+            font-family: Lato, sans-serif;
+            color: #0D0000;
+        }
+        header {
+            padding: 6px 10%;
+        }
+        h1 {
+            padding: 8px 15px;
+            margin: 0; 
+        }
+        #map {
+            position: absolute;
+            width: 100%;
+            top: 0;
+            bottom: 0;
+        }
+        footer {
+            padding: 6px 10%;
+            width: 80%;
+        }
+        p {
+            font-size: 1em;
+            color: #001323;
+        }   
+         h1 {
+        position: absolute;
+        z-index: 100;
+        top: 10px;
+        left: 60px;
+        padding: 8px 15px;
+        margin: 0;
+        color: whitesmoke;
+        font-size: 1.5em;
+        background: rgba(25,25,25,0.8);
+        border-radius: 5px; 
+         }
+         .legend {
+        padding: 6px 8px;
+        font-size: 1em;
+        background: rgba(75,75,75,0.8);
+        color: whitesmoke;
+        box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        border-radius: 5px;
+        width: 160px;
+        }
+        .legend h3 {
+        font-size: 1.1em;
+        font-weight: bold;
+        line-height: 1em;
+        color: whitesmoke;
+        margin: 0;
+        }
+        .legend li {
+        list-style-type: none;
+        height: 22px;
+        }
+        .legend span {
+        width: 30px;
+        height: 20px;
+        float: left;
+        margin-right: 10px;
+        }
+        #ui-controls {
+        width: 176px;   
+        padding: 8px 15px 8px 15px;
+        background: rgba(75,75,75,0.8);
+        box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        border-radius: 5px; 
+        color: whitesmoke;
+        }
+        .year-slider {
+        width: 100%;
+        }
+        #ui-controls .min {
+        float: left;   
+        }
+        #ui-controls .max {
+        float: right;
+        }
+        label {
+        font-size: 1.1em;
+        font-weight: bold;
+        }
+
+    </style>
+</head>
+
+<body>
+    <h1>Percentage of African women in the labor force </h1>
+    
+
+    <div id='map'></div>
+    <div id="ui-slider">
+        <label><span class="min">1990</span><span class="max">2011</span>
+            <input type="range" min = "1990", max= "2011", 
+               value = "1990", step= "1", class="year-slider"></input>
+        </label>
+    <script>
+        //set map in location and original settings 
+        var options = {
+            center: [7.1881, 21.0936],
+            zoom: 3,
+            minZoom: 3,
+            maxZoom: 8,
+            dragging: false,
+            zoomControl: false
+        }
+        
+        //create a new Leaflet map and create variable 'map'
+        
+        var map = L.map('map', options);
+        
+        var dataLayer,
+            attribute = "1990"
+        ;
+        
+        var currentAttribute = 'Labor-1990';
+
+        
+         var tiles = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
+            subdomains: 'abcd',
+            minZoom: 0,
+            maxZoom: 18
+        });
+        map.addLayer(tiles);
+        
+        $.getJSON("africa.geojson", function(counties) {
+
+            Papa.parse('ADI_Labor_Female.csv', {
+                download: true,
+                header: true,
+                complete: function(data) {
+                    
+                    processData(counties, data);
+
+               
+            }}) 
+
+         });
+           $(".year-slider")
+        .on('input change', function() {
+            attribute = $(this).val();
+//            updateMap();
+        });
+
+        
+         function processData(countries, data) {
+
+            for (var country in countries.features) {
+
+                var props = countries.features[country].properties
+
+                for(var d in data.data) {
+                
+                    if(props.SOV_A3 == data.data[d].Country__attrCode) {
+                        countries.features[country].properties = data.data[d]; 
+                        break;
+                    }  
+                } // inner for loop is complete
+
+            } // outer for loop is complete
+             
+             //console.log(countries);
+                
+                
+                dataLayer = L.geoJson(countries, { //using the global data layer in the loaded data
+                       style: function(feature) { //style for GeoJSON layers
+                            return {
+                            color: '#dddddd', //set stroke color 
+                            weight: 2, //set stroke width
+                            fillOpacity: 1, //change fill opacity
+                            fillColor: '#1f78b4' //set fill color 
+
+                        }
+            
+                    }}).addTo(map); //add the Leaflet layer to the map
+                drawLegend(); //calling function that draws the legend farther down in map
+                drawMap(); //calling the function to draw the map
+                drawInfo(); //moveover popup calling function
+                createSliderUI(); // make slider show on map 
+         };
+//    
+      function drawMap() {
+              //new function to get class breaks and assign return value to variable
+            var breaks = getClassBreaks();
+             console.log(breaks);
+              //loop through each layer of the GeoJSON layer
+             
+            dataLayer.eachLayer(function(layer) {
+                    
+                 // access layer properties more easily
+                    
+            var props = layer.feature.properties;
+                
+                layer.setStyle({
+                    fillColor: getColor(props[currentAttribute], breaks),
+                    fillOpacity: 1
+                });
+                    
+                          
+            //bind a popup to the layer
+            
+            layer.bindPopup("<b>"+props["Country_Name_attr"]+"</b></br>"  +
+                            (currentAttribute).toLocaleString());
+            
+            //changes stroke color and width when mouseover event happens
+            
+            layer.on('mouseover', function(){
+                updateInfo(this);
+                layer.setStyle({color: 'yellow', weight: 4});
+            });
+            
+            //changes stroke color and width back to normal when mouseout
+            
+            layer.on('mouseout', function(){
+                layer.setStyle({color: 'dddddd', weight: 2});
+            });
+            });
+             //change the layer's fill color using its attribute values
+             
+             
+            updateLegend(breaks);
+             
+            updateInfo();
+        }
+        
+////        
+////        
+        function ui() {
+            
+            //makes a new Leaflet object and positions it 
+            
+            var dataView = L.control({position: 'topleft'});
+            
+            //adds taht data variable to the map
+            
+            dataView.onAdd = function(map) {
+                
+                
+                var controls = L.DomUtil.get('ui-controls');
+                
+                return controls; //returns the ui-control div to the Leaflet control object
+                
+            }
+            dataView.addTo(map); //moves the ui-controls pulldown object into map area
+            
+        }
+        
+         function getClassBreaks() {
+             
+            var values = [];
+             
+            dataLayer.eachLayer(function(layer) { //loop through layer
+                
+                var value = layer.feature.properties[currentAttribute];
+                if(value != undefined){
+                    values.push(Number(value));  
+                }
+  
+                //pushes the value into the array
+            }); 
+             
+           // console.log(values);
+
+            var breaks = ss.quantile(values, [0, 0.2, 0.4, 0.6, 0.8, 1]);
+             //returns the breaks array
+             
+             
+                return breaks; 
+        };
+//            
+//        //goes through breaks in data to know what color to assign them
+        
+          function getColor(d, breaks) {
+            if(d <= breaks[1]) {
+                return '#feedde';
+            } else if(d <= breaks[2]) {
+                return '#fdbe85';
+            } else if(d <= breaks[3]) {
+                return '#fd8d3c';
+            } else if(d <= breaks[4]) {
+                return '#e6550d'
+            } else if(d <= breaks[5]) {
+                return '#a63603'
+            }
+        }
+        
+        
+        function drawLegend() {
+              //creates a new Leaflet control object assigned to variable 'legend', and positions it top left
+            var legend = L.control({position: 'topright'});
+            
+             //adds legend to the right area of the map
+            
+            legend.onAdd = function(map) {
+                
+                var div = L.DomUtil.create('div', 'legend');
+                return div;
+            };
+            
+            //add the legend to the map
+            legend.addTo(map);
+        }    
+        
+        
+        
+         function updateLegend(breaks) {
+             //gives a title to the legend and access the names assigned to the labeled atributes 
+             
+            var legend = $('.legend').html("<h3> Women in the Labor Force " + currentAttribute + "</h3><ul>"); 
+             
+             //loops through the breaks to update the legend
+             
+            for (var i = 0; i < breaks.length-1; i++) {
+            
+                var color = getColor(breaks[i + 1], breaks);
+                
+             //assigns the colors to the breaks being looped through
+                
+                legend.append('<li><span style="background:' + color + '"></span> ' +
+                    (breaks[i]).toLocaleString() + '% &mdash; ' + 
+                    (breaks[i + 1]).toLocaleString() + '%</li>');
+                }
+            legend.append("</ul>");
+        }
+         
+       
+    function createSliderUI(){ //creates year slider 
+        
+        var sliderControl = L.control({ position: 'bottomleft'} );
+        
+            sliderControl.onAdd = function(map) {
+                
+        var slider = L.DomUtil.get("ui-slider");
+                
+            L.DomEvent.addListener(slider, 'mousedown', function(e) { 
+                
+                L.DomEvent.stopPropagation(e); 
+                
+                });
+            return slider;
+        }
+        sliderControl.addTo(map);
+        
+        //adds slider to map
+        
+
+
+    }
+        $(".year-slider")
+            .on('input change', function() {
+                attribute = $(this).val();
+            
+//                updateMap();
+            
+        });
+       function drawInfo() {
+            //poitions the mouseover info into the top right 
+            var info = L.control({position: 'topright'});
+            
+            info.onAdd = function(map) {
+                
+                var div = L.DomUtil.create('div', 'info');
+                
+                return div;
+            }
+            
+            info.addTo(map);
+            //adds this to the map
+           
+            $(".info").hide();
+            // makes the mouseover hide whenever mousedout
+        }
+        function updateInfo(layer){
+            
+            var props = currentAttribute;
+            
+            var html = "<h3>"+props['Country_Name_attr']+" Country</h3>"+"% working women</h3>"
+            
+//            for(var i = 'Labor-1990'; i<='Labor-2011'; i++) {
+//                
+//                html += "<br>" + i + " : <b>" + props[String(i)] + "%" + "</b>" ;
+//            }
+            
+            $(".info").html(html);
+        }
+    </script>
+    
+</body>
+
+</html>
