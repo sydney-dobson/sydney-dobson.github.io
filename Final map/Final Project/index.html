@@ -112,7 +112,7 @@
     
 
     <div id='map'></div>
-    <div id="ui-controls">
+    <div id="ui-slider">
         <label><span class="min">1990</span><span class="max">2011</span>
             <input type="range" min = "1990", max= "2011", 
                value = "1990", step= "1", class="year-slider"></input>
@@ -163,7 +163,7 @@
            $(".year-slider")
         .on('input change', function() {
             attribute = $(this).val();
-            updateMap();
+//            updateMap();
         });
 
         
@@ -374,7 +374,7 @@
             .on('input change', function() {
                 attribute = $(this).val();
             
-                updateMap();
+//                updateMap();
             
         });
        function drawInfo() {
@@ -400,10 +400,10 @@
             
             var html = "<h3>"+props['Country_Name_attr']+" Country</h3>"+"% working women</h3>"
             
-            for(var i = Labor-1990; i<=Labor-2011; i++) {
-                
-                html += "<br>" + i + " : <b>" + props[String(i)] + "%" + "</b>" ;
-            }
+//            for(var i = 'Labor-1990'; i<='Labor-2011'; i++) {
+//                
+//                html += "<br>" + i + " : <b>" + props[String(i)] + "%" + "</b>" ;
+//            }
             
             $(".info").html(html);
         }
