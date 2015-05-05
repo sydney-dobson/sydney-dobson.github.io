@@ -123,7 +123,7 @@
             center: [7.1881, 21.0936],
             zoom: 3,
             minZoom: 3,
-            maxZoom: 8,
+            maxZoom: 3,
             dragging: false,
             zoomControl: false
         }
@@ -136,25 +136,25 @@
             attribute = "1990"
         ;
         
-        var currentAttribute = 'Labor-1990';
+        var currentAttribute = '1990';
 
         
          var tiles = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
             subdomains: 'abcd',
-            minZoom: 0,
-            maxZoom: 18
+            minZoom: 3,
+            maxZoom: 3
         });
         map.addLayer(tiles);
         
-        $.getJSON("africa.geojson", function(counties) {
+        $.getJSON("africa.geojson", function(countries) {
 
             Papa.parse('ADI_Labor_Female.csv', {
                 download: true,
                 header: true,
                 complete: function(data) {
                     
-                    processData(counties, data);
+                    processData(countries, data);
 
                
             }}) 
@@ -206,7 +206,7 @@
       function drawMap() {
               //new function to get class breaks and assign return value to variable
             var breaks = getClassBreaks();
-             console.log(breaks);
+//             console.log(breaks);
               //loop through each layer of the GeoJSON layer
              
             dataLayer.eachLayer(function(layer) {
@@ -220,16 +220,16 @@
                     fillOpacity: 1
                 });
                     
-                          
+                 
             //bind a popup to the layer
             
             layer.bindPopup("<b>"+props["Country_Name_attr"]+"</b></br>"  +
-                            (currentAttribute).toLocaleString());
+                            layer.feature.properties[currentAttribute]);
             
             //changes stroke color and width when mouseover event happens
             
             layer.on('mouseover', function(){
-                updateInfo(this);
+//                updateInfo(this);
                 layer.setStyle({color: 'yellow', weight: 4});
             });
             
@@ -239,12 +239,14 @@
                 layer.setStyle({color: 'dddddd', weight: 2});
             });
             });
+          
+          
              //change the layer's fill color using its attribute values
              
              
             updateLegend(breaks);
              
-            updateInfo();
+//            updateInfo();
         }
         
 ////        
@@ -360,6 +362,10 @@
                 
                 L.DomEvent.stopPropagation(e); 
                 
+                
+//            for(var i = '1990'; i<='2011'; i++) {
+//               var color = getColor(breaks[i + 1], breaks);
+//            }
                 });
             return slider;
         }
@@ -377,6 +383,7 @@
 //                updateMap();
             
         });
+        
        function drawInfo() {
             //poitions the mouseover info into the top right 
             var info = L.control({position: 'topright'});
@@ -394,19 +401,20 @@
             $(".info").hide();
             // makes the mouseover hide whenever mousedout
         }
-        function updateInfo(layer){
-            
-            var props = currentAttribute;
-            
-            var html = "<h3>"+props['Country_Name_attr']+" Country</h3>"+"% working women</h3>"
-            
-//            for(var i = 'Labor-1990'; i<='Labor-2011'; i++) {
+        
+//        function updateInfo(layer){
+//            
+//            var props = layer.feature.properties;
+//            
+//            var html = "<h3>"+props['NAME']+" Country</h3>"+"% African women in the labor force</h3>"
+//            
+//            for(var i = 1990; i<=2011; i++) {
 //                
 //                html += "<br>" + i + " : <b>" + props[String(i)] + "%" + "</b>" ;
 //            }
-            
-            $(".info").html(html);
-        }
+//            
+//            $(".info").html(html);
+//        }
     </script>
     
 </body>
